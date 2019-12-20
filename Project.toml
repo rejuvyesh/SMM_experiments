@@ -1,0 +1,11 @@
+[deps]
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
+Hyperopt = "93e5fe13-2215-51db-baaf-2e9a34fb2712"
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+RigidBodyDynamics = "366cf18f-59d5-5db9-a4de-86a9f6786172"
+StructuredMechModels = "49eb0842-c156-4c0e-b374-fa0a2422abc2"
+TrajectoryOptimization = "c79d492b-0548-5874-b488-5a62c1d9d0ca"
