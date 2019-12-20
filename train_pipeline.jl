@@ -16,7 +16,10 @@ include(joinpath(@__DIR__, "tasks.jl"))
 
 function run_experiment(seed, mtype, taskname, ntrajs::Int, traj_len::Int, hparams)
     Random.seed!(seed)
-    task, thetamask, defhparams = TASK_REGISTRY[taskname]
+    params = TASK_REGISTRY[taskname]
+    task = params.sys
+    thetamask = params.thetamask
+    defhparams = params.hparams
     task_d = discretize_model(task, :rk4)
     hparams = merge(defhparams, hparams)
     if !hparams.wraptopi
@@ -34,18 +37,18 @@ function run_experiment(seed, mtype, taskname, ntrajs::Int, traj_len::Int, hpara
     end
 
     train_dataset = SMM.addnoise(train_dataset, hparams.noisestd)
-    valid_dataset_path = joinpath(logdir, task_name, "validation_dataset_dt=$(hparams.dt).jld2")
+    valid_dataset_path = joinpath(hparams.logdir, taskname, "validation_dataset_dt=$(hparams.dt).jld2")
     JLD2.@load valid_dataset_path valid_dataset
 
     qdim = round(Int, task_d.n/2)
-    logdir = joinpath(hparams.logdir, task_name, mtype,
+    logdir = joinpath(hparams.logdir, taskname, mtype,
                       "dataprocess=$(hparams.dataprocess)", "ntrajs=$ntrajs",
                       "seed=$seed,traj_len=$traj_len,dt=$(hparams.dt)_wraptopi=$(hparams.wraptopi)")
 
-    nn_jl = getfield(SMM, Symbol(mtype))(qdim, task_d.m, thetamask; hidden_sizes=hparams.hidden_sizes)
-    nn_py = getfield(SMM.Torch, Symbol(mtype))(qdim, task_d.m, thetamask; hidden_sizes=hparams.hidden_sizes)
+    nn_jl = getfield(SMM, Symbol(mtype))(qdim, task_d.m, thetamask; hidden_sizes=hparams.hidden_sizes[mtype])
+    nn_py = getfield(SMM.Torch, Symbol(mtype))(qdim, task_d.m, thetamask; hidden_sizes=hparams.hidden_sizes[mtype])
     hparams = merge(hparams, (logdir=logdir,))
-    
+
     @info "Training..."
     SMM.Torch.train!(nn_py, train_dataset, valid_dataset, hparams)
     Flux.loadparams!(nn_jl, SMM.Torch.params(nn_py))
@@ -76,6 +79,32 @@ function train(args)
              dt=dt,
              batch_size=batch_size,
              logdir=logdir)
-    
+
     run_experiment(seed, mtype, taskname, ntrajs, traj_len, hparams)
+end
+
+function dumpdata(args)
+    Random.seed!(42)
+
+    taskname = args[1]
+    outdir = args[2]
+
+    ntrajs = 256*64
+    traj_len = 3
+    dt = 0.05
+    if taskname == "doublecartpole"
+        ntrajs *= 2
+    end
+
+    params = TASK_REGISTRY[taskname]
+    task = params.sys
+    thetamask = params.thetamask
+    defhparams = params.hparams
+    task_d = discretize_model(task, :rk4)
+
+    env = SMM.Env(task_d, randn(task_d.n), thetamask)
+    valid_dataset = generate_rand_data(env, ntrajs, traj_len, dt; maxu=defhparams.maxu, stddev=defhparams.stddev)
+    path = joinpath(outdir, taskname)
+    mkpath(path)
+    JLD2.@save joinpath(path, "validation_dataset_dt=$dt.jld2") valid_dataset
 end

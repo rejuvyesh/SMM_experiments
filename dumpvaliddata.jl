@@ -7,4 +7,4 @@ exec julia --project --color=yes --startup-file=no -e 'include(popfirst!(ARGS))'
 
 include(joinpath(@__DIR__, "train_pipeline.jl"))
 
-train(ARGS)
+dumpdata(ARGS)

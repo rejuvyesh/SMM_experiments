@@ -14,7 +14,7 @@ const TASK_REGISTRY = Dict(
                  xf=[0.0, 0.0, 0.0, 0.0],
                  Q=(1e-2)*Diagonal(I, 4),
                  Qf=(1e3)*Diagonal(I, 4),
-                 R=(10)*Diagonal(I, 1),
+                 R=(10.0)*Diagonal(I, 1),
                  hparams=(gradnorm=100., maxu=100., stddev=30.0, patience=500, lr=1e-3, noisestd=0.001, 
                           hidden_sizes=Dict("ControlAffine"=>(32, 32, 32) , "Naive"=>(128, 128, 128)))),
     "acrobot"=>(sys=TO.Dynamics.acrobot_model, thetamask=[1, 1, 0, 0],
